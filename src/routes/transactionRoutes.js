@@ -8,7 +8,7 @@ const {
     
   } = require("../controllers/transactionController");
 
-const { authUser } = require('../middlewares/authMiddleware');
+const { auth } = require('../middlewares/authMiddleware');
 
 
 
@@ -19,18 +19,18 @@ Client.init(process.env.COINBASE_API_KEY);*/
 
 //fetch wallet balance 
 
-router.get("/:id", authUser, getUserBalance )
+router.get("/:id", auth, getUserBalance )
 
 // Deposit API 
-router.post('/deposit', authUser, depositeMoney);
+router.post('/deposit', auth, depositeMoney);
 
 //withdraw API
 
-router.post('/withdraw', authUser, withdrawMoney);
+router.post('/withdraw', auth, withdrawMoney);
 
 //transfer API
 
-router.post('transfer', authUser,  transferMoney);
+router.post('transfer', auth,  transferMoney);
 
 // Coinbase webhook to confirm deposit
 /*router.post('/crypto/webhook', async (req, res) => {

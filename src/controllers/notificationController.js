@@ -30,7 +30,7 @@ exports.sendNotification = async (req, res) => {
 
  
 
-exports.getUserNotifications = async (req, res) => {
+exports.getNotification = async (req, res) => {
   const { id } = req.params;
 
   try {

@@ -5,7 +5,7 @@ const {
     
   } = require("../controllers/notificationController");
 
-  const { auth } = require("../middleware/authMiddleware");
+  const { auth } = require("../middlewares/authMiddleware");
 
   const router = express.Router();
 
@@ -15,5 +15,7 @@ const {
 
   //route fetch notification for user
 
-  router.get("/:id", auth, getNotification)
+  router.get("/:id", auth, getNotification);
+
+  module.exports = router;
 

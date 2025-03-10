@@ -1,6 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const User = require('../models/User');
 const Bet = require('../models/Bet');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
@@ -17,6 +18,9 @@ bot.onText(/\/start/, async (msg) => {
         } else {
             bot.sendMessage(chatId, `Welcome back, ${username}!`);
         }
+
+        
+        bot.sendMessage(chatId, `Your JWT token: ${token}`);
     } catch (error) {
         console.error('Error handling /start:', error);
         bot.sendMessage(chatId, 'An error occurred. Please try again.');
