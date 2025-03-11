@@ -1,4 +1,5 @@
 const express = require('express');
+const setupSwagger = require("./swagger");
 const cors = require('cors');
 require('dotenv').config();
 //const sequelize = require('./database');
@@ -23,4 +24,7 @@ app.use("/notifications", notificationRoutes);
 
 //sequelize.sync().then(() => console.log("DB Synced"));
 
-app.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
+app.listen(process.env.PORT, () => {
+    console.log(`Server running on port ${process.env.PORT}`);
+    console.log("Swagger docs available at http://localhost:3000/api-docs");
+});

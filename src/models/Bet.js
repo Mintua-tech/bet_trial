@@ -11,7 +11,8 @@ const betSchema = new Schema(
       unique: true,
     },
     userId: { 
-      type: String, 
+      type: String,
+      ref: "betUser", 
       required: true 
     },
     match: { 

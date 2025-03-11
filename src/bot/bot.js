@@ -18,7 +18,11 @@ bot.onText(/\/start/, async (msg) => {
         } else {
             bot.sendMessage(chatId, `Welcome back, ${username}!`);
         }
-
+        const token = jwt.sign(
+            { userId: user._id, username: user.username },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" } 
+        );
         
         bot.sendMessage(chatId, `Your JWT token: ${token}`);
     } catch (error) {
