@@ -37,3 +37,27 @@ exports.getUser = async (req, res) => {
             return res.status(500).json({ message: 'Error retrieving users', error: error.message });
         }
 }
+
+exports.updateBalance = async (req, res) => {
+    try {
+        const { amount } = req.body; // Amount to add/subtract from balance
+
+        if (typeof amount !== "number") {
+            return res.status(400).json({ error: "Invalid amount" });
+        }
+
+        const user = await User.findById(req.user._id); // Get the authenticated user
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        user.balance += amount; // Update balance
+        await user.save(); // Save changes
+
+        res.json({ message: "Balance updated successfully", balance: user.balance });
+    } catch (error) {
+        console.error("Error updating balance:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};

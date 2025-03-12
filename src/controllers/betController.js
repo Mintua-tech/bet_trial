@@ -4,13 +4,17 @@ const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 
 exports.placeBet = async (req, res) => {
+    
     const { match, odds, stake } = req.body;
     const session = await mongoose.startSession(); // Start a transaction session
 
     try {
         session.startTransaction(); // Begin transaction
 
-        const user = await User.findById(req.user.userId).session(session);
+        //const user = await User.findById(req.user.userId).session(session);
+
+        const user = req.user;
+        
 
         if (!user) {
             await session.abortTransaction();
