@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/Transaction');
 const { auth } = require('../middlewares/authMiddleware');
-const {getUser, updateBalance, register, login } = require('../controllers/authController')
+const {getUser, updateBalance, register, login, getUserById } = require('../controllers/authController')
 
 router.get('/transactions', auth, async (req, res) => {
     const transactions = await Transaction.findAll({ where: { userId: req.user.userId }, order: [['createdAt', 'DESC']] });
@@ -14,6 +14,8 @@ router.get('/users', getUser);
 router.post('/register', register);
 
 router.post('/login', login);
+
+router.get("/:id", getUserById);
 
 router.put("/balance", auth, updateBalance);
 

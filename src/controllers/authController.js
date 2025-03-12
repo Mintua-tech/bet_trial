@@ -6,6 +6,11 @@ const User = require('../models/User');
 
 exports.register = async (req, res) => {
     const { _id, username, name, phone } = req.body;
+
+    const existingUser = await User.findById(_id);
+    if (existingUser) {
+        return res.status(400).json({ error: "User already exists" });
+    }
     
     const user = await User.create({ _id, username, name, phone });
 
@@ -70,6 +75,23 @@ exports.updateBalance = async (req, res) => {
         res.json({ message: "Balance updated successfully", balance: user.balance });
     } catch (error) {
         console.error("Error updating balance:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+exports.getUserById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Error fetching user:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 };
