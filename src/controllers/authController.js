@@ -5,20 +5,32 @@ const User = require('../models/User');
  
 
 exports.register = async (req, res) => {
-    const { username, password } = req.body;
+    const { _id, username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, password: hashedPassword });
-    res.json(user);
+    const user = await User.create({ _id, username, hash: hashedPassword });
+
+    return res.status(200).json({
+        message: 'user registered successfully',
+        user: user
+    });
+   
 };
 
 exports.login = async (req, res) => {
     const { username, password } = req.body;
-    const user = await User.findOne({ where: { username } });
-    if (!user || !await bcrypt.compare(password, user.password)) {
+    const user = await User.findOne({ username });
+    console.log(user);
+    if (!user || !await bcrypt.compare(password, user.hash)) {
+        console.log(user);
+       
         return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
-    res.json({ token, balance: user.balance });
+    return res.status(200).json({
+        message: 'you are logged in successfully',
+        data: { token, balance: user.balance }
+    })
+    
 }
 
 exports.getUser = async (req, res) => {
