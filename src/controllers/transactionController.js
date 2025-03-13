@@ -3,6 +3,7 @@ const User = require('../models/User');
 const coinbase = require('coinbase-commerce-node');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const mongoose = require('mongoose');
+const axios = require('axios');
 
 
 // Get the balance for a specific user
@@ -23,29 +24,81 @@ exports.getUserBalance = async (req, res) => {
   }
 };
 
-exports.depositeMoney = async (req, res) => {
-    const { amount, paymentMethodId } = req.body;
 
+
+
+exports.depositeMoney = async (req, res) => {
+    const { amount, email, firstName, lastName, phone } = req.body;
+    const tx_ref = `txn-${Date.now()}`; // Unique transaction reference
+    
     try {
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount * 100, // Convert to cents
-            currency: 'usd',
-            payment_method: paymentMethodId,
-            confirm: true,
+        const chapaResponse = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
+            amount: amount,
+            currency: 'ETB',
+            email: email,
+            first_name: firstName,
+            last_name: lastName,
+            phone_number: phone,
+            tx_ref: tx_ref,
+            callback_url: 'http://localhost:8080/wallet/callback', // Update with your callback URL
+            return_url: 'https://google.com/success', // Update with your success URL
+        }, {
+            headers: {
+                Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+                'Content-Type': 'application/json'
+            }
         });
 
-        // Update user's balance
-        const user = await User.findByPk(req.user.userId);
-        await user.update({ balance: user.balance + amount });
-
-        // Log transaction
-        await Transaction.create({ userId: user.id, type: 'deposit', amount });
-
-        res.json({ message: 'Deposit successful', paymentIntent });
+        
+        
+        // Send checkout URL to the client
+        res.json({ checkoutUrl: chapaResponse.data.data.checkout_url });
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(400).json({ error: err.response?.data?.message || err.message });
     }
-}
+};
+
+// Callback handler to verify payment
+exports.verifyPayment = async (req, res) => {
+  const { tx_ref } = req.query;
+  console.log("lets check it");
+
+  try {
+      const verificationResponse = await axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
+          headers: {
+              Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+          }
+      });
+
+      const { status, data } = verificationResponse.data;
+
+      if (status === 'success' && data.status === 'success') {
+          // Update user's balance
+          const user = await User.findOneAndUpdate(
+            { _id: req.user.userId },
+            { $inc: { balance: parseFloat(data.amount) } }, // Increment balance
+            { new: true } // Return updated document
+        );
+        
+        if (user) {
+            await Transaction.create({
+                userId: user._id,
+                type: 'deposit',
+                amount: parseFloat(data.amount),
+            });
+        }
+        
+        return res.json({ message: 'Payment verified and balance updated successfully' });
+          
+      }
+      
+      res.status(400).json({ error: 'Payment verification failed' });
+  } catch (err) {
+      res.status(400).json({ error: err.response?.data?.message || err.message });
+  }
+};
+
+
 
 
 

@@ -5,6 +5,7 @@ const {
     depositeMoney,
     withdrawMoney,
     transferMoney,
+    verifyPayment
     
   } = require("../controllers/transactionController");
 
@@ -23,6 +24,10 @@ router.get("/:id", auth, getUserBalance )
 
 // Deposit API 
 router.post('/deposit', auth, depositeMoney);
+
+// Payement Verification API
+
+router.get('/callback', auth, verifyPayment)
 
 //withdraw API
 
