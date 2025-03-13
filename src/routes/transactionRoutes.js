@@ -9,7 +9,8 @@ const {
     
   } = require("../controllers/transactionController");
 
-const { auth } = require('../middlewares/authMiddleware');
+const { auth, authId } = require('../middlewares/authMiddleware');
+console.log(authId);
 
 
 
@@ -23,7 +24,7 @@ Client.init(process.env.COINBASE_API_KEY);*/
 router.get("/:id", auth, getUserBalance )
 
 // Deposit API 
-router.post('/deposit', auth, depositeMoney);
+router.post('/deposit', authId, depositeMoney);
 
 // Payement Verification API
 

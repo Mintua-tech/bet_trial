@@ -75,7 +75,7 @@ exports.verifyPayment = async (req, res) => {
       if (status === 'success' && data.status === 'success') {
           // Update user's balance
           const user = await User.findOneAndUpdate(
-            { _id: req.user.userId },
+            { _id: req.chatId },
             { $inc: { balance: parseFloat(data.amount) } }, // Increment balance
             { new: true } // Return updated document
         );

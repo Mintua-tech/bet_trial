@@ -24,6 +24,18 @@ exports.auth = async (req, res, next) => {
     }
 };
 
+exports.authId = async (req, res, next) => {
+    
+    const { chat_id } = req.body;
+    
+    if (!chat_id) {
+        return res.status(400).json({ error: "Chat ID is required" });
+    }
+    
+    req.chatId = chat_id;
+    next();
+};
+
 
 exports.authAdmin = async (req, res, next) => {
     try {
@@ -43,3 +55,5 @@ exports.authAdmin = async (req, res, next) => {
         res.status(401).json({ error: "Invalid token" });
     }
 };
+
+
