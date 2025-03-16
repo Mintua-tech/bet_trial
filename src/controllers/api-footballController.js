@@ -30,3 +30,29 @@ exports.getLiveMatches = async (req, res) => {
     }
 };
 
+exports.getLeagues = async (req, res) => {
+
+    const cacheKey = 'live_matches';
+    const cachedResponse = cache.get(cacheKey);
+    if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_DURATION) {
+        return res.json({ data: cachedResponse.data });
+    }
+    try {
+
+        const response = await axios.get(`https://v3.football.api-sports.io/leagues`, {
+            headers: { "x-apisports-key": process.env.apifootball }    
+        });
+
+        cache.set(cacheKey, {
+            data: response.data, 
+            timestamp: Date.now()
+        });   
+        
+        res.json({ data: response.data }); 
+        
+    } catch (error) {
+        console.error("Error fetching league matches:", error.response?.data || error.message);
+        res.status(400).json({ error: error.response?.data?.message || err.message });
+    }
+}
+

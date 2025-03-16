@@ -3,7 +3,7 @@ const setupSwagger = require("./swagger");
 const cors = require('cors');
 require('dotenv').config();
 //const sequelize = require('./database');
-const bot = require('./bot/bot');
+//const bot = require('./bot/bot');
 const adminRoutes = require('./routes/adminRoutes');
 const authRoutes = require('./routes/userRoutes');
 const betRoutes = require('./routes/betRoutes');
