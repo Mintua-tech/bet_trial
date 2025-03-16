@@ -83,8 +83,11 @@ exports.getUserById = async (req, res) => {
     try {
         const { chatId } = req.params;
 
+        console.log(chatId);
 
-        const user = await User.findOne({ chatId });
+
+        const user = await User.findOne({ chatId: String(chatId) });
+        console.log(user);
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }

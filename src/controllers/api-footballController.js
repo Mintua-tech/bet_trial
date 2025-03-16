@@ -1,11 +1,25 @@
 const axios = require('axios');
+const cache = new Map();
+const CACHE_DURATION = 60 * 1000; // Cache duration in milliseconds (e.g., 60 seconds)
 
 
 exports.getLiveMatches = async (req, res) => {
 
+    const cacheKey = 'live_matches';
+    const cachedResponse = cache.get(cacheKey);
+    if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_DURATION) {
+        return res.json({ data: cachedResponse.data });
+    }
+
+
     try {
         const response = await axios.get(`https://v3.football.api-sports.io/fixtures?live=all`, {
             headers: { "x-apisports-key": process.env.apifootball }    
+        });
+
+        cache.set(cacheKey, {
+            data: response.data,
+            timestamp: Date.now()
         });
         
         res.json({ data: response.data });
