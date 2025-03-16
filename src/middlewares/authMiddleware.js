@@ -26,13 +26,14 @@ exports.auth = async (req, res, next) => {
 
 exports.authId = async (req, res, next) => {
     
-    const { chat_id } = req.body;
+    const { chatId } = req.body;
+    console.log(chatId);
     
-    if (!chat_id) {
+    if (!chatId) {
         return res.status(400).json({ error: "Chat ID is required" });
     }
     
-    req.chatId = chat_id;
+    req.chatId = chatId;
     next();
 };
 

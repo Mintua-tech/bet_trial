@@ -11,9 +11,9 @@ exports.placeBet = async (req, res) => {
     try {
         session.startTransaction(); // Begin transaction
 
-        //const user = await User.findById(req.user.userId).session(session);
+        const user = await User.findOne({ chatId: String(req.chatId) }).session(session);
 
-        const user = req.user;
+        
         
 
         if (!user) {

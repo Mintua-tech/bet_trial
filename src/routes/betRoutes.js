@@ -6,13 +6,13 @@ const {
     cancelBet,
   } = require("../controllers/betController");
 
-const { auth, authAdmin } = require("../middlewares/authMiddleware");
+const { auth, authAdmin, authId } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
 
 
-router.post("/", auth, placeBet);
+router.post("/", authId, placeBet);
 
 router.get("/:id", getBet);
 
