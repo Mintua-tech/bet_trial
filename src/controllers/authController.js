@@ -5,14 +5,14 @@ const User = require('../models/User');
  
 
 exports.register = async (req, res) => {
-    const { chatId, username, name, phone } = req.body;
+    const { chatId, username, firstname, lastname, phoneNumber } = req.body;
 
     const existingUser = await User.findOne({ chatId });     
     if (existingUser) {
         return res.status(400).json({ error: "User already exists" });
     }
     
-    const user = await User.create({ chatId, username, name, phone });
+    const user = await User.create({ chatId, username, firstname, lastname, phoneNumber });
 
     return res.status(200).json({
         message: 'user registered successfully',
