@@ -28,34 +28,34 @@ exports.getUserBalance = async (req, res) => {
 
 
 exports.depositeMoney = async (req, res) => {
-    const { amount, email, firstName, lastName, phone } = req.body;
-    const tx_ref = `txn-${Date.now()}`; // Unique transaction reference
-    
-    try {
-        const chapaResponse = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
-            amount: amount,
-            currency: 'ETB',
-            email: email,
-            first_name: firstName,
-            last_name: lastName,
-            phone_number: phone,
-            tx_ref: tx_ref,
-            callback_url: 'http://localhost:8080/wallet/callback', // Update with your callback URL
-            return_url: 'https://google.com/success', // Update with your success URL
-        }, {
-            headers: {
-                Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
-                'Content-Type': 'application/json'
-            }
-        });
+  const { amount, email, firstName, lastName, phone } = req.body;
+  const tx_ref = `txn-${Date.now()}`; // Unique transaction reference
+  
+  try {
+      const chapaResponse = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
+          amount: amount,
+          currency: 'ETB',
+          email: email,
+          first_name: firstName,
+          last_name: lastName,
+          phone_number: phone,
+          tx_ref: tx_ref,
+          callback_url: 'http://localhost:8080/wallet/callback', // Update with your callback URL
+          return_url: 'https://google.com/success', // Update with your success URL
+      }, {
+          headers: {
+              Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+              'Content-Type': 'application/json'
+          }
+      });
 
-        
-        
-        // Send checkout URL to the client
-        res.json({ checkoutUrl: chapaResponse.data.data.checkout_url });
-    } catch (err) {
-        res.status(400).json({ error: err.response?.data?.message || err.message });
-    }
+      
+      
+      // Send checkout URL to the client
+      res.json({ checkoutUrl: chapaResponse.data.data.checkout_url });
+  } catch (err) {
+      res.status(400).json({ error: err.response?.data?.message || err.message });
+  }
 };
 
 // Callback handler to verify payment

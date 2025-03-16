@@ -9,6 +9,7 @@ const authRoutes = require('./routes/userRoutes');
 const betRoutes = require('./routes/betRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const notificationRoutes = require('./routes/notificationsRoutes');
+const footballRoutes = require('./routes/apifootballRoutes');
 
 const app = express();
 app.use(cors());
@@ -21,6 +22,7 @@ app.use('/auth', authRoutes);
 app.use("/bets", betRoutes);
 app.use("/wallet", transactionRoutes);
 app.use("/notifications", notificationRoutes);
+app.use('/football', footballRoutes);
 
 //sequelize.sync().then(() => console.log("DB Synced"));
 
