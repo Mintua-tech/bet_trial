@@ -5,14 +5,14 @@ const User = require('../models/User');
  
 
 exports.register = async (req, res) => {
-    const { _id, username, name, phone } = req.body;
+    const { chatId, username, name, phone } = req.body;
 
-    const existingUser = await User.findById(_id);
+    const existingUser = await User.findOne({ chatId });     
     if (existingUser) {
         return res.status(400).json({ error: "User already exists" });
     }
     
-    const user = await User.create({ _id, username, name, phone });
+    const user = await User.create({ chatId, username, name, phone });
 
     return res.status(200).json({
         message: 'user registered successfully',
@@ -81,10 +81,10 @@ exports.updateBalance = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { chatId } = req.params;
 
-        const user = await User.findById(id);
 
+        const user = await User.findOne({ chatId });
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
