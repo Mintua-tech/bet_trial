@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
- 
+ //controller that handle user registeration
 
 exports.register = async (req, res) => {
     const { chatId, username, firstName, lastName, phoneNumber } = req.body;
@@ -21,6 +21,8 @@ exports.register = async (req, res) => {
    
 };
 
+//controller that handle user login
+
 exports.login = async (req, res) => {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
@@ -38,6 +40,8 @@ exports.login = async (req, res) => {
     
 }
 
+//controller that fetch all users
+
 exports.getUser = async (req, res) => {
 
         try {
@@ -54,6 +58,8 @@ exports.getUser = async (req, res) => {
             return res.status(500).json({ message: 'Error retrieving users', error: error.message });
         }
 }
+
+//controller that update user balance
 
 exports.updateBalance = async (req, res) => {
     try {
@@ -78,6 +84,8 @@ exports.updateBalance = async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 };
+
+//controller that fetch user by id
 
 exports.getUserById = async (req, res) => {
     try {

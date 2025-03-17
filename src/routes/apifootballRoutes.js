@@ -4,11 +4,15 @@ const {getLiveMatches, getLeagues, getMatchOdds} = require('../controllers/api-f
 
 const router = express.Router();
 
-console.log(getLiveMatches);
+//route that fetch live matches
 
 router.get('/livematches', getLiveMatches);
 
+//route that fetch match odds 
+
 router.get('/matchodds', getMatchOdds);
+
+//route that fetch leagues
 
 router.get('/league', getLeagues)
 

@@ -2,9 +2,12 @@ const axios = require('axios');
 const cache = new Map();
 const CACHE_DURATION = 60 * 1000; // Cache duration in milliseconds (e.g., 60 seconds)
 
+//controller that handle live match request
+
 
 exports.getLiveMatches = async (req, res) => {
-
+    
+    const CACHE_DURATION = 3 * 1000;
     const cacheKey = 'live_matches';
     const cachedResponse = cache.get(cacheKey);
     if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_DURATION) {
@@ -29,6 +32,8 @@ exports.getLiveMatches = async (req, res) => {
         res.status(400).json({ error: error.response?.data?.message || err.message });
     }
 };
+
+//controller that handle get leagues request
 
 exports.getLeagues = async (req, res) => {
 
@@ -55,6 +60,8 @@ exports.getLeagues = async (req, res) => {
         res.status(400).json({ error: error.response?.data?.message || err.message });
     }
 }
+
+//controller that handle get match odds request
 
 exports.getMatchOdds = async (req, res) => {
     const fixtureId = req.query.fixture || '1210585'; // Allow dynamic fixture ID via query param

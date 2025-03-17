@@ -19,22 +19,23 @@ const Charge = coinbase.resources.Charge;
 Client.init(process.env.COINBASE_API_KEY);*/
 
 
-//fetch wallet balance 
+//route that fetch user wallet balance 
 
 router.get("/:id", auth, getUserBalance )
 
-// Deposit API 
+//route that recharge user balance 
+
 router.post('/deposit', authId, depositeMoney);
 
-// Payement Verification API
+//callback route that used Payment Verification 
 
 router.get('/callback', verifyPayment);
 
-//withdraw API
+//route that withdraw user balance
 
 router.post('/withdraw', auth, withdrawMoney);
 
-//transfer API
+
 
 router.post('transfer', auth,  transferMoney);
 

@@ -9,13 +9,23 @@ router.get('/transactions', auth, async (req, res) => {
     res.json(transactions);
 });
 
+// route that fetch all users
+
 router.get('/users', getUser);
+
+// route that register user
 
 router.post('/register', register);
 
+//route that login user
+
 router.post('/login', login);
 
+//route that fetch user by chat id
+
 router.get("/:chatId", getUserById);
+
+//route that update user balance
 
 router.put("/balance", auth, updateBalance);
 

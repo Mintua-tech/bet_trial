@@ -7,6 +7,7 @@ const axios = require('axios');
 
 
 // Get the balance for a specific user
+
 exports.getUserBalance = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -25,7 +26,7 @@ exports.getUserBalance = async (req, res) => {
 };
 
 
-
+//controller that make user to recharge balance
 
 exports.depositeMoney = async (req, res) => {
   const { amount, email, firstName, lastName, phone } = req.body;
@@ -59,7 +60,8 @@ exports.depositeMoney = async (req, res) => {
   }
 };
 
-// Callback handler to verify payment
+// Callback handler to verify payment and create transaction history
+
 exports.verifyPayment = async (req, res) => {
   const { tx_ref } = req.query;
   console.log("lets check it");

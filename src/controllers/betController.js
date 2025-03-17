@@ -3,6 +3,8 @@ const Bet = require("../models/Bet");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 
+//controller that handles place bet 
+
 exports.placeBet = async (req, res) => {
     
     const { match, odds, stake } = req.body;
@@ -52,6 +54,8 @@ exports.placeBet = async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 };
+
+//controller that fetch bet by id
 
 exports.getBet = async (req, res) => {
     const betId = req.params.id; // Extract bet ID from the route parameter

@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+//middleware that return user payload
+
 exports.auth = async (req, res, next) => {
     
     try {
@@ -24,6 +26,8 @@ exports.auth = async (req, res, next) => {
     }
 };
 
+//middleware that return user chat id
+
 exports.authId = async (req, res, next) => {
     
     const { chatId } = req.body;
@@ -37,6 +41,7 @@ exports.authId = async (req, res, next) => {
     next();
 };
 
+//middleware that return admin payload
 
 exports.authAdmin = async (req, res, next) => {
     try {
