@@ -28,7 +28,7 @@ router.post('/deposit', authId, depositeMoney);
 
 // Payement Verification API
 
-router.get('/callback', auth, verifyPayment)
+router.get('/callback', verifyPayment);
 
 //withdraw API
 
