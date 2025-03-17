@@ -40,7 +40,7 @@ exports.depositeMoney = async (req, res) => {
           last_name: lastName,
           phone_number: phone,
           tx_ref: tx_ref,
-          callback_url: 'http://localhost:8080/wallet/callback', // Update with your callback URL
+          callback_url: 'https://bet-trial.onrender.com/wallet/callback', // Update with your callback URL
           return_url: 'https://google.com/success', // Update with your success URL
       }, {
           headers: {
