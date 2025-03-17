@@ -57,7 +57,11 @@ exports.getLeagues = async (req, res) => {
 }
 
 exports.getMatchOdds = async (req, res) => {
-    const fixtureId = req.query.fixture || '1210585'; // Allow dynamic fixture ID via query param
+     const { fixture } = req.query;
+
+    if (!fixture) {
+        return res.status(400).json({ error: "Fixture ID is required" });
+    }
     const cacheKey = `match_odds_${fixtureId}`;
     const cachedResponse = cache.get(cacheKey);
 
