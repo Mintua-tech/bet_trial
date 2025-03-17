@@ -40,6 +40,7 @@ exports.depositeMoney = async (req, res) => {
           last_name: lastName,
           phone_number: phone,
           tx_ref: tx_ref,
+          payment_method: 'telebirr',
           callback_url: 'https://bet-trial.onrender.com/wallet/callback', // Update with your callback URL
           return_url: 'https://google.com/success', // Update with your success URL
       }, {

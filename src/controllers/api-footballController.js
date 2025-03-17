@@ -56,3 +56,29 @@ exports.getLeagues = async (req, res) => {
     }
 }
 
+exports.getMatchOdds = async (req, res) => {
+    const fixtureId = req.query.fixture || '1210585'; // Allow dynamic fixture ID via query param
+    const cacheKey = `match_odds_${fixtureId}`;
+    const cachedResponse = cache.get(cacheKey);
+
+    if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_DURATION) {
+        return res.json({ data: cachedResponse.data });
+    }
+
+    try {
+        const response = await axios.get(`https://v3.football.api-sports.io/odds?fixture=${fixtureId}`, {
+            headers: { "x-apisports-key": process.env.apifootball }
+        });
+        
+        cache.set(cacheKey, {
+            data: response.data.response,
+            timestamp: Date.now()
+        });
+
+        res.json({ data: response.data.response });
+    } catch (error) {
+        console.error("Error fetching match odds:", error.response?.data || error.message);
+        res.status(400).json({ error: error.response?.data?.message || error.message });
+    }
+};
+
