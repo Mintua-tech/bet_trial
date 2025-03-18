@@ -15,8 +15,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+//database configuration
+
 const dbconfig = require('./database');
 
+//Routes
 app.use('/api/admin', adminRoutes);
 app.use('/auth', authRoutes);
 app.use("/bets", betRoutes);
