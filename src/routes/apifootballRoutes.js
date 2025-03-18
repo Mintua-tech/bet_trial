@@ -1,6 +1,6 @@
 const express = require('express');
 
-const {getLiveMatches, getLeagues, getMatchOdds} = require('../controllers/api-footballController');
+const {getLiveMatches, getLeagues, getMatchOdds, getfixturebyDate} = require('../controllers/api-footballController');
 
 const router = express.Router();
 
@@ -14,7 +14,11 @@ router.get('/matchodds', getMatchOdds);
 
 //route that fetch leagues
 
-router.get('/league', getLeagues)
+router.get('/league', getLeagues);
+
+//route that fetch fixture by date
+
+router.get('/fixtures', getfixturebyDate);
 
 
 module.exports = router;

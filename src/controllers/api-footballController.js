@@ -95,3 +95,36 @@ exports.getMatchOdds = async (req, res) => {
     }
 };
 
+exports.getfixturebyDate = async (req, res) => {
+    //const fixtureId = req.query.fixture || '1210585'; // Allow dynamic fixture ID via query param
+    const { fixtureDate } = req.query;
+
+    if (!fixtureDate) {
+        return res.status(400).json({ error: "Fixture Date is required" });
+    }
+
+    const cacheKey = `match_fixture_${fixtureDate}`;
+    const cachedResponse = cache.get(cacheKey);
+
+    if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_DURATION) {
+        return res.json({ data: cachedResponse.data });
+    }
+
+    try {
+        const response = await axios.get(`https://v3.football.api-sports.io/fixtures`, {
+            params: { date: fixtureDate },
+            headers: { "x-apisports-key": process.env.apifootball }
+        });
+        
+        cache.set(cacheKey, {
+            data: response.data.response,
+            timestamp: Date.now()
+        });
+
+        res.json({ data: response.data.response });
+    } catch (error) {
+        console.error("Error fetching match fixture:", error.response?.data || error.message);
+        res.status(400).json({ error: error.response?.data?.message || error.message });
+    }
+};
+
