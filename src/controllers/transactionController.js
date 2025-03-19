@@ -55,7 +55,7 @@ exports.depositeMoney = async (req, res) => {
       tx_ref: tx_ref,
       payment_method: 'telebirr',
       callback_url: 'https://bet-trial.onrender.com/wallet/callback', // Update with your callback URL
-      return_url: 'https://c067-149-34-244-143.ngrok-free.app', // Update with your success URL
+      return_url: 'https://sports-frontend-seven.vercel.app', // Update with your success URL
     }, {
       headers: {
         Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
