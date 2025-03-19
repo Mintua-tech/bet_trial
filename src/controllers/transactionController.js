@@ -4,6 +4,7 @@ const coinbase = require('coinbase-commerce-node');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const mongoose = require('mongoose');
 const axios = require('axios');
+const crypto = require("crypto");
 
 
 // Get the balance for a specific user
@@ -76,27 +77,56 @@ exports.depositeMoney = async (req, res) => {
 
 // Callback handler to verify payment and create transaction history
 
+
 exports.verifyPayment = async (req, res) => {
-
+  console.log("Verification Started");
   console.log("Incoming request body:", req.body);
+
   try {
+    console.log("In try block");
+    // 1. Get your secret from environment variable
+    const secret = "8wCLK02PPHQcY7luI2VMj8qWTrk8SKx3PaXYacUfO/Q"; // Make sure it matches what's in your Chapa settings
 
-    const { tx_ref } = req.body.data;
+    // 2. Compute HMAC SHA256 of the request body using your secret
+    //    Make sure you are stringifying the body in the same way Chapa does
+    const computedHash = crypto
+      .createHmac("sha256", secret)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
 
+    // 3. Read the signature headers
+    const chapaSignature = req.headers["chapa-signature"];
+    const xChapaSignature = req.headers["x-chapa-signature"];
+
+    // 4. If EITHER header is present and matches the computed hash, we trust it
+    const isValidChapaSignature =
+      (chapaSignature && computedHash === chapaSignature) ||
+      (xChapaSignature && computedHash === xChapaSignature);
+
+    if (!isValidChapaSignature) {
+      return res.status(400).json({ error: "Invalid Chapa signature" });
+    }
+
+    // From here on, the request is verified as coming from Chapa
+
+    const { tx_ref } = req.body; // or req.body if Chapa sends tx_ref at top-level
     if (!tx_ref) {
       return res.status(400).json({ error: "Missing transaction reference" });
     }
 
-    const verificationResponse = await axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
-      headers: {
-        Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+    // 5. Verify with Chapa’s verify endpoint
+    const verificationResponse = await axios.get(
+      `https://api.chapa.co/v1/transaction/verify/${tx_ref}`,
+      {
+        headers: {
+          Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+        },
       }
-    });
+    );
 
     const { status, data } = verificationResponse.data;
 
-    if (status === 'success' && data.status === 'success') {
-
+    if (status === "success" && data.status === "success") {
       // Find the existing transaction in MongoDB using Mongoose
       const transaction = await Transaction.findOne({ tx_ref });
 
@@ -125,19 +155,19 @@ exports.verifyPayment = async (req, res) => {
         return res.status(404).json({ error: "User not found" });
       }
 
-      return res.json({
+      return res.status(200).json({
         message: "Payment verified and balance updated successfully",
         user,
       });
     }
 
     return res.status(400).json({ error: "Payment verification failed" });
-
   } catch (err) {
-    res.status(400).json({ error: err.response?.data?.message || err.message });
+    return res.status(400).json({
+      error: err.response?.data?.message || err.message,
+    });
   }
 };
-
 
 
 
