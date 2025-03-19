@@ -13,14 +13,14 @@ exports.getUserBalance = async (req, res) => {
     const { userId } = req.params;
 
     const result = await Transaction.aggregate([
-        { $match: { userId } }, // Filter transactions by userId
-        { $project: { _id: 0, amount: 1 } } // Only include the `amount` field
-      ]);
-  
-      res.status(200).json({ userId, amounts: result });
-    
-    
-} catch (error) {
+      { $match: { userId } }, // Filter transactions by userId
+      { $project: { _id: 0, amount: 1 } } // Only include the `amount` field
+    ]);
+
+    res.status(200).json({ userId, amounts: result });
+
+
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
@@ -29,75 +29,112 @@ exports.getUserBalance = async (req, res) => {
 //controller that make user to recharge balance
 
 exports.depositeMoney = async (req, res) => {
-  const { amount, email, firstName, lastName, phone } = req.body;
+  const { amount, email, firstName, lastName, phone, chatId } = req.body;
   const tx_ref = `txn-${Date.now()}`; // Unique transaction reference
-  
-  try {
-      const chapaResponse = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
-          amount: amount,
-          currency: 'ETB',
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-          phone_number: phone,
-          tx_ref: tx_ref,
-          payment_method: 'telebirr',
-          callback_url: 'https://bet-trial.onrender.com/wallet/callback', // Update with your callback URL
-          return_url: 'https://sports-frontend-seven.vercel.app/', // Update with your success URL
-      }, {
-          headers: {
-              Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
-              'Content-Type': 'application/json'
-          }
-      });
 
-      
-      
-      // Send checkout URL to the client
-      res.json({ checkoutUrl: chapaResponse.data.data.checkout_url });
+  try {
+
+    // Create a new transaction document with status 'pending'
+    const transactionRecord = await Transaction.create({
+      tx_ref,
+      chatId,
+      email,
+      amount,
+      currency: "ETB",
+      status: "pending",
+    });
+
+
+    const chapaResponse = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
+      amount: amount,
+      currency: 'ETB',
+      email: email,
+      first_name: firstName,
+      last_name: lastName,
+      phone_number: phone,
+      tx_ref: tx_ref,
+      payment_method: 'telebirr',
+      callback_url: 'https://bet-trial.onrender.com/wallet/callback', // Update with your callback URL
+      return_url: 'https://sports-frontend-seven.vercel.app/', // Update with your success URL
+    }, {
+      headers: {
+        Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    // Update the transaction document with the payment URL
+    transactionRecord.payment_url = chapaResponse.data.data.checkout_url;
+    await transactionRecord.save();
+
+    // Send checkout URL to the client
+    res.json({ checkoutUrl: chapaResponse.data.data.checkout_url });
   } catch (err) {
-      res.status(400).json({ error: err.response?.data?.message || err.message });
+    res.status(400).json({ error: err.response?.data?.message || err.message });
   }
 };
 
 // Callback handler to verify payment and create transaction history
 
 exports.verifyPayment = async (req, res) => {
-  const { tx_ref } = req.query;
-  console.log("lets check it");
 
+  console.log("Incoming request body:", req.body);
   try {
-      const verificationResponse = await axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
-          headers: {
-              Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
-          }
-      });
 
-      const { status, data } = verificationResponse.data;
+    const { tx_ref } = req.body.data;
 
-      if (status === 'success' && data.status === 'success') {
-          // Update user's balance
-          const user = await User.findOneAndUpdate(
-            { _id: req.chatId },
-            { $inc: { balance: parseFloat(data.amount) } }, // Increment balance
-            { new: true } // Return updated document
-        );
-        
-        if (user) {
-            await Transaction.create({
-                userId: user._id,
-                type: 'deposit',
-                amount: parseFloat(data.amount),
-            });
-        }
-        
-        return res.json({ message: 'Payment verified and balance updated successfully' });
-          
+    if (!tx_ref) {
+      return res.status(400).json({ error: "Missing transaction reference" });
+    }
+
+    const verificationResponse = await axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
+      headers: {
+        Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
       }
-      
-      res.status(400).json({ error: 'Payment verification failed' });
+    });
+
+    const { status, data } = verificationResponse.data;
+
+    if (status === 'success' && data.status === 'success') {
+
+      // Find the existing transaction in MongoDB using Mongoose
+      const transaction = await Transaction.findOne({ tx_ref });
+
+      if (!transaction) {
+        console.error("Transaction not found in database.");
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      // Update transaction status to 'success'
+      transaction.status = "success";
+      await transaction.save(); // Save the updated transaction in MongoDB
+
+      // Convert amount to a number
+      const amountPaid = parseFloat(data.amount);
+      const chatId = transaction.chatId;
+
+      // Find the user by chatId and increment their balance
+      const user = await User.findOneAndUpdate(
+        { chatId: chatId },
+        { $inc: { balance: amountPaid } }, // Increment balance
+        { new: true } // Return updated user document
+      );
+
+      if (!user) {
+        console.error("User not found.");
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      return res.json({
+        message: "Payment verified and balance updated successfully",
+        user,
+      });
+    }
+
+    return res.status(400).json({ error: "Payment verification failed" });
+
   } catch (err) {
-      res.status(400).json({ error: err.response?.data?.message || err.message });
+    res.status(400).json({ error: err.response?.data?.message || err.message });
   }
 };
 
@@ -163,7 +200,7 @@ exports.transferMoney = async (req, res) => {
     const receiver = await User.findByPk(receiverId);
 
     if (!sender || !receiver) {
-        
+
       await session.abortTransaction();
       return res.status(404).json({ error: 'Sender or receiver not found' });
     }
@@ -174,9 +211,9 @@ exports.transferMoney = async (req, res) => {
       return res.status(400).json({ error: 'Insufficient balance' });
     }
 
-        // Deduct from sender and add to receiver
-        sender.balance -= amount;
-        receiver.balance += amount;
+    // Deduct from sender and add to receiver
+    sender.balance -= amount;
+    receiver.balance += amount;
 
     // Save changes for both sender and receiver
     await sender.save();
@@ -184,16 +221,16 @@ exports.transferMoney = async (req, res) => {
 
     // Log the transactions for both sender and receiver
     await Transaction.create(
-        [{ userId: sender.id, type: 'withdrawal', amount }, { userId: receiver.id, type: 'deposit', amount }],
-        { session }
-      );
-  
-      // Commit the transaction
-      await session.commitTransaction();
-  
-      res.json({ message: 'Transfer successful' });
-    } catch (err) {
-      // If something went wrong, abort the transaction
+      [{ userId: sender.id, type: 'withdrawal', amount }, { userId: receiver.id, type: 'deposit', amount }],
+      { session }
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+
+    res.json({ message: 'Transfer successful' });
+  } catch (err) {
+    // If something went wrong, abort the transaction
     await session.abortTransaction();
     res.status(500).json({ error: err.message });
   } finally {
@@ -201,7 +238,7 @@ exports.transferMoney = async (req, res) => {
     session.endSession();
   }
 };
-   
+
 
 
 

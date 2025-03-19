@@ -29,7 +29,7 @@ router.post('/deposit', authId, depositeMoney);
 
 //callback route that used Payment Verification 
 
-router.get('/callback', verifyPayment);
+router.post('/callback', verifyPayment);
 
 //route that withdraw user balance
 

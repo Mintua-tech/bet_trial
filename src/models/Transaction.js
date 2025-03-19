@@ -1,37 +1,44 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
-const uuid = require('uuid');
+// models/transaction.js
+const mongoose = require("mongoose");
 
-// Define the Transaction Schema
-const transactionSchema = new Schema(
+const transactionSchema = new mongoose.Schema(
   {
-    id: { 
-      type: String, 
-      default: () => uuid.v4(), // Generate a UUID using the uuid package
+    tx_ref: {
+      type: String,
       required: true,
       unique: true,
     },
-    userId: { 
-      type: String, // Use String to store UUID as a string
-      required: true 
+    chatId: {
+      type: String,
+      required: true,
     },
-    type: { 
-      type: String, 
-      enum: ['deposit', 'withdrawal', 'bet_won', 'bet_placed'], // Enum for transaction type
-      required: true 
+    amount: {
+      type: Number,
+      required: true,
     },
-    amount: { 
-      type: Number, // Store the amount as a Number
-      required: true 
+    currency: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "success", "failed"],
+      default: "pending",
+      required: true,
+    },
+    payment_url: {
+      type: String,
+      default: null,
     },
   },
   {
-    timestamps: true, // Automatically add createdAt and updatedAt fields
+    timestamps: true,
+    versionKey: false, // optional: disables __v field
   }
 );
 
-// Create the Mongoose Model from the schema
-const Transaction = mongoose.model('Transaction', transactionSchema);
-
-module.exports = Transaction;
-
+module.exports = mongoose.model("Transaction", transactionSchema);
