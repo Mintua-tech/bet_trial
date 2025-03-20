@@ -172,7 +172,7 @@ exports.verifyPayment = async (req, res) => {
 //controller used to make withrawl
 
 exports.withdrawMoney = async (req, res) => {
-  const { amount, email, firstName, lastName, phone, chatId, bankAccount, bankCode } = req.body;
+  const { amount, email, account_name, phone, chatId, bank_code, account_number } = req.body;
   const tx_ref = `withdraw-${Date.now()}`; // Unique transaction reference
 
   try {
@@ -196,16 +196,15 @@ exports.withdrawMoney = async (req, res) => {
       type: "withdrawal"
     });
 
-    const chapaResponse = await axios.post('https://api.chapa.co/v1/transaction/withdraw', {
+    const chapaResponse = await axios.post('https://api.chapa.co/v1/transfers', {
       amount: amount,
       currency: 'ETB',
       email: email,
-      first_name: firstName,
-      last_name: lastName,
+      account_name: account_name,
       phone_number: phone,
       tx_ref: tx_ref,
-      bank_account: bankAccount,
-      bank_code: bankCode,
+      account_number: account_number,
+      bank_code: bank_code,
     }, {
       headers: {
         Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
