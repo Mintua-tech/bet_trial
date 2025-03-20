@@ -257,7 +257,7 @@ exports.verifyWithdrawal = async (req, res) => {
     }
 
     const verificationResponse = await axios.get(
-      `https://api.chapa.co/v1/transaction/verify/${tx_ref}`,
+      `https://api.chapa.co/v1/transfers/verify/${tx_ref}`,
       {
         headers: {
           Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
@@ -340,6 +340,47 @@ exports.transferMoney = async (req, res) => {
   } finally {
     // End the session
     session.endSession();
+  }
+};
+
+
+exports.getBankDetails = async (req, res) => {
+
+  try {
+    // Check if the user has sufficient balance
+    const user = await User.findOne({ chatId });
+    if (!user || user.balance < amount) {
+      return res.status(400).json({ error: "Insufficient balance" });
+    }
+
+    // Deduct the amount from user's balance and create a pending transaction
+    user.balance -= amount;
+    await user.save();
+
+    const transactionRecord = await Transaction.create({
+      tx_ref,
+      chatId,
+      email,
+      amount,
+      currency: "ETB",
+      status: "pending",
+      type: "withdrawal"
+    });
+
+    const chapaResponse = await axios.post('https://api.chapa.co/v1/banks', 
+       {
+      headers: {
+        Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    res.status(200).json({ message: 'Banks retrieved successfully', data: response.data });
+    
+    
+  } catch (err) {
+   // Handle error if the API request fails
+   res.status(500).json({ message: 'Failed to fetch banks', error: error.response ? error.response.data : error.message });
   }
 };
 
