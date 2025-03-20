@@ -169,46 +169,121 @@ exports.verifyPayment = async (req, res) => {
   }
 };
 
-
-
+//controller used to make withrawl
 
 exports.withdrawMoney = async (req, res) => {
-  const { amount, destinationId } = req.body; // destinationId = user's bank/card/Stripe account ID
+  const { amount, email, firstName, lastName, phone, chatId, bankAccount, bankCode } = req.body;
+  const tx_ref = `withdraw-${Date.now()}`; // Unique transaction reference
 
   try {
-    // Get user details
-    const user = await User.findByPk(req.user.userId);
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    // Check if the user has sufficient balance
+    const user = await User.findOne({ chatId });
+    if (!user || user.balance < amount) {
+      return res.status(400).json({ error: "Insufficient balance" });
     }
 
-    // Check if user has enough balance
-    if (user.balance < amount) {
-      return res.status(400).json({ error: 'Insufficient balance' });
-    }
+    // Deduct the amount from user's balance and create a pending transaction
+    user.balance -= amount;
+    await user.save();
 
-    // Convert amount to cents (Stripe uses cents)
-    const amountInCents = amount * 100;
-
-    // Send money via Stripe Payouts
-    const payout = await stripe.payouts.create({
-      amount: amountInCents,
-      currency: 'usd',
-      method: 'instant', // Use 'standard' if you don't want instant payouts
-      destination: destinationId, // Bank/Card ID from Stripe
+    const transactionRecord = await Transaction.create({
+      tx_ref,
+      chatId,
+      email,
+      amount,
+      currency: "ETB",
+      status: "pending",
+      type: "withdrawal"
     });
 
-    // Deduct balance
-    await user.update({ balance: user.balance - amount });
+    const chapaResponse = await axios.post('https://api.chapa.co/v1/transaction/withdraw', {
+      amount: amount,
+      currency: 'ETB',
+      email: email,
+      first_name: firstName,
+      last_name: lastName,
+      phone_number: phone,
+      tx_ref: tx_ref,
+      bank_account: bankAccount,
+      bank_code: bankCode,
+    }, {
+      headers: {
+        Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    // Log transaction
-    await Transaction.create({ userId: user.id, type: 'withdrawal', amount });
-
-    res.json({ message: 'Withdrawal successful', payout });
-
+    if (chapaResponse.data.status === "success") {
+      transactionRecord.status = "processing";
+      await transactionRecord.save();
+      return res.json({ message: "Withdrawal request submitted successfully." });
+    } else {
+      // If withdrawal request fails, refund the amount back to user
+      user.balance += amount;
+      await user.save();
+      return res.status(400).json({ error: "Withdrawal request failed." });
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(400).json({ error: err.response?.data?.message || err.message });
+  }
+};
+
+//controller that handle verification while withdrawl
+
+exports.verifyWithdrawal = async (req, res) => {
+  console.log("Withdrawal Verification Started");
+  console.log("Incoming request body:", req.body);
+
+  try {
+    const secret = "8wCLK02PPHQcY7luI2VMj8qWTrk8SKx3PaXYacUfO/Q";
+    const computedHash = crypto
+      .createHmac("sha256", secret)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
+
+    const chapaSignature = req.headers["chapa-signature"];
+    const xChapaSignature = req.headers["x-chapa-signature"];
+
+    const isValidChapaSignature =
+      (chapaSignature && computedHash === chapaSignature) ||
+      (xChapaSignature && computedHash === xChapaSignature);
+
+    if (!isValidChapaSignature) {
+      return res.status(400).json({ error: "Invalid Chapa signature" });
+    }
+
+    const { tx_ref } = req.body;
+    if (!tx_ref) {
+      return res.status(400).json({ error: "Missing transaction reference" });
+    }
+
+    const verificationResponse = await axios.get(
+      `https://api.chapa.co/v1/transaction/verify/${tx_ref}`,
+      {
+        headers: {
+          Authorization: `Bearer CHASECK_TEST-UZFJVaRagxQ2iHdsz1BAEIBTuhpeO99C`,
+        },
+      }
+    );
+
+    const { status, data } = verificationResponse.data;
+
+    if (status === "success" && data.status === "success") {
+      const transaction = await Transaction.findOne({ tx_ref });
+      if (!transaction) {
+        console.error("Transaction not found in database.");
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      transaction.status = "completed";
+      await transaction.save();
+
+      return res.status(200).json({ message: "Withdrawal completed successfully." });
+    }
+
+    return res.status(400).json({ error: "Withdrawal verification failed" });
+  } catch (err) {
+    return res.status(400).json({ error: err.response?.data?.message || err.message });
   }
 };
 

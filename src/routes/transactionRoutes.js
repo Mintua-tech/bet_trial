@@ -5,7 +5,8 @@ const {
     depositeMoney,
     withdrawMoney,
     transferMoney,
-    verifyPayment
+    verifyPayment,
+    verifyWithdrawal
     
   } = require("../controllers/transactionController");
 
@@ -33,7 +34,11 @@ router.post('/callback', verifyPayment);
 
 //route that withdraw user balance
 
-router.post('/withdraw', auth, withdrawMoney);
+router.post('/withdraw', withdrawMoney);
+
+//route that verify withdrawl request
+
+router.post('/withdraw/callback', verifyWithdrawal);
 
 
 
